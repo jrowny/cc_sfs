@@ -113,6 +113,8 @@ class ElegooCC
     bool                filamentStopped;
     bool                filamentRunout;
 
+    unsigned long startedAt;
+
     // Acknowledgment tracking
     bool          waitingForAck;
     int           pendingAckCommand;

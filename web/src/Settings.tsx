@@ -9,6 +9,7 @@ function Settings() {
   const [error, setError] = createSignal('')
   const [saveSuccess, setSaveSuccess] = createSignal(false)
   const [apMode, setApMode] = createSignal<boolean | null>(null);
+  const [pauseOnRunout, setPauseOnRunout] = createSignal(true);
   // Load settings from the server and scan for WiFi networks
   onMount(async () => {
     try {
@@ -27,6 +28,7 @@ function Settings() {
       setElegooip(settings.elegooip || '')
       setTimeoutValue(settings.timeout || 2000)
       setApMode(settings.ap_mode || null)
+      setPauseOnRunout(settings.pause_on_runout !== undefined ? settings.pause_on_runout : true)
 
       setError('')
     } catch (err: any) {
@@ -49,6 +51,7 @@ function Settings() {
         ap_mode: false,
         elegooip: elegooip(),
         timeout: timeout(),
+        pause_on_runout: pauseOnRunout(),
       }
 
       const response = await fetch('/update_settings', {
@@ -162,6 +165,21 @@ function Settings() {
               class="input"
             />
             <p class="label">Value in milliseconds between reading from the movement sensor</p>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Pause on Runout</legend>
+            <label class="label cursor-pointer">
+              <input
+                type="checkbox"
+                id="pauseOnRunout"
+                checked={pauseOnRunout()}
+                onChange={(e) => setPauseOnRunout(e.target.checked)}
+                class="checkbox checkbox-accent"
+              />
+              <span class="label-text">Pause printing when filament runs out, rather than letting the Elegoo Centauri Carbon handle the runout</span>
+
+            </label>
           </fieldset>
 
           <button

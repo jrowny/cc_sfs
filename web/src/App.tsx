@@ -1,40 +1,46 @@
-import Settings from './Settings'
-import Status from './Status'
-import Logs from './Logs'
-import Update from './Update'
-import About from './About'
+import { A, useLocation } from '@solidjs/router'
+import { ParentProps } from 'solid-js'
 
-function App() {
+function App(props: ParentProps) {
+  const location = useLocation()
+
+  const isActive = (path: string) => {
+    const pathname = location.pathname
+    if (path === '/' || path === '/status') {
+      return pathname === '/' || pathname === '/status'
+    }
+    return pathname === path
+  }
 
   return (
     <div class="flex flex-col items-center h-screen pt-10 bg-base-200 ">
       <h1 class="text-xl font-bold w-full max-w-5xl pl-1 pb-4">Elegoo Centauri Carbon <span class="text-accent">X</span> BigTreeTech SFS 2.0</h1>
       <div class="tabs tabs-lift w-full max-w-5xl">
 
-        <input type="radio" name="tabs" class="tab" aria-label="Status" checked />
-        <div class="tab-content bg-base-100 border-base-300 p-6">
-          <Status />
-        </div>
+        <A href="/status" class={`tab ${isActive('/status') ? 'tab-active' : ''}`}>
+          Status
+        </A>
 
-        <input type="radio" name="tabs" class="tab" aria-label="Settings" />
-        <div class="tab-content bg-base-100 border-base-300 p-6">
-          <Settings />
-        </div>
+        <A href="/settings" class={`tab ${isActive('/settings') ? 'tab-active' : ''}`}>
+          Settings
+        </A>
 
-        <input type="radio" name="tabs" class="tab" aria-label="Logs" />
-        <div class="tab-content bg-base-100 border-base-300 p-6">
-          <Logs />
-        </div>
+        <A href="/logs" class={`tab ${isActive('/logs') ? 'tab-active' : ''}`}>
+          Logs
+        </A>
 
-        <input type="radio" name="tabs" class="tab" aria-label="Update" />
-        <div class="tab-content bg-base-100 border-base-300 p-6">
-          <Update />
-        </div>
-        <input type="radio" name="tabs" class="tab" aria-label="About" />
-        <div class="tab-content bg-base-100 border-base-300 p-6">
-          <About />
-        </div>
+        <A href="/update" class={`tab ${isActive('/update') ? 'tab-active' : ''}`}>
+          Update
+        </A>
 
+        <A href="/about" class={`tab ${isActive('/about') ? 'tab-active' : ''}`}>
+          About
+        </A>
+
+      </div>
+
+      <div class="w-full max-w-5xl bg-base-100 border-base-300 p-6">
+        {props.children}
       </div>
     </div>
   )

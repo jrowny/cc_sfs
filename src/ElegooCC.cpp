@@ -182,14 +182,20 @@ void ElegooCC::handleStatus(JsonDocument &doc)
     // Parse print info
     if (status.containsKey("PrintInfo"))
     {
-        JsonObject printInfo = status["PrintInfo"];
-        printStatus          = printInfo["Status"];
-        currentLayer         = printInfo["CurrentLayer"];
-        totalLayer           = printInfo["TotalLayer"];
-        progress             = printInfo["Progress"];
-        currentTicks         = printInfo["CurrentTicks"];
-        totalTicks           = printInfo["TotalTicks"];
-        PrintSpeedPct        = printInfo["PrintSpeedPct"];
+        JsonObject          printInfo = status["PrintInfo"];
+        sdcp_print_status_t newStatus = printInfo["Status"].as<sdcp_print_status_t>();
+        if (newStatus != printStatus && newStatus == SDCP_PRINT_STATUS_PRINTING)
+        {
+            logger.log("Print status changed to printing");
+            startedAt = millis();
+        }
+        printStatus   = newStatus;
+        currentLayer  = printInfo["CurrentLayer"];
+        totalLayer    = printInfo["TotalLayer"];
+        progress      = printInfo["Progress"];
+        currentTicks  = printInfo["CurrentTicks"];
+        totalTicks    = printInfo["TotalTicks"];
+        PrintSpeedPct = printInfo["PrintSpeedPct"];
     }
 
     // Store mainboard ID if we don't have it yet (I'm unsure if we actually need this)
@@ -265,8 +271,9 @@ void ElegooCC::connect()
     {
         webSocket.disconnect();
     }
-    webSocket.setReconnectInterval(1000);
+    webSocket.setReconnectInterval(3000);
     ipAddress = settingsManager.getElegooIP();
+    logger.logf("Connecting to %s", ipAddress.c_str());
     webSocket.begin(ipAddress, CARBON_CENTAURI_PORT, "/websocket");
 }
 
@@ -338,14 +345,19 @@ void ElegooCC::loop()
     {
         logger.log(filamentRunout ? "Filament has run out" : "Filament has been detected");
     }
-    filamentRunout = newFilamentRunout;
-    bool hasPauseCondition =
-        (settingsManager.getPauseOnRunout() && filamentRunout) || filamentStopped;
+    filamentRunout         = newFilamentRunout;
+    bool hasPauseCondition = (settingsManager.getPauseOnRunout() && filamentRunout) ||
+                             (filamentStopped && (currentTime - startedAt > 10000));
 
     // Check if we should pause the print
     if (hasPauseCondition && webSocket.isConnected() && !waitingForAck &&
         printStatus == SDCP_PRINT_STATUS_PRINTING && hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING))
     {
+        logger.logf("currentZ: %f, movementTimeout: %d", currentZ, movementTimeout);
+        logger.logf("startedAt: %d", startedAt);
+        logger.logf("currentTime: %d", currentTime);
+        logger.logf("timeSinceStart: %d", currentTime - startedAt);
+        logger.logf("lastChangeTime: %d", lastChangeTime);
         logger.log("Pausing print, detected filament runout or stopped");
         logger.logf("filamentRunout: %d, filamentStopped: %d", filamentRunout, filamentStopped);
         logger.logf("printStatus: %d, machineStatus: %d", printStatus,
