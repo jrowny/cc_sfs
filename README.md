@@ -26,6 +26,8 @@ Note: the first layer uses 2 X Timeout because it is usually a slower flow layer
 
 ### Wiring (with stock runout detection)
 
+_*WARNING:*_ Integrating with the stock wiring may void your Elegoo CC warranty. Do this at your own risk. Your printer may be different, make sure to validate with a multimeter before connecting any wires to the CC.
+
 There are only 4 wires used in this project. All connectors are JST-XH 3 pin connectors, even though only 2 pins are used on each of the two SFS 2.0 connectors.
 
 | Wire              | Color |
