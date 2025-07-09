@@ -6,6 +6,7 @@
 #include "SettingsManager.h"
 
 #define ACK_TIMEOUT_MS 5000
+#define START_PRINTING_TIMEOUT_MS 10000
 
 // External function to get current time (from main.cpp)
 extern unsigned long getTime();
@@ -345,20 +346,24 @@ void ElegooCC::loop()
     {
         logger.log(filamentRunout ? "Filament has run out" : "Filament has been detected");
     }
-    filamentRunout         = newFilamentRunout;
-    bool hasPauseCondition = (settingsManager.getPauseOnRunout() && filamentRunout) ||
-                             (filamentStopped && (currentTime - startedAt > 10000));
+    filamentRunout = newFilamentRunout;
+
+    // a pause condition is if the filament ran out or the filament stopped moving
+    bool hasPauseCondition =
+        (settingsManager.getPauseOnRunout() &&
+         filamentRunout) ||  // only pause if pause on runout is enabled, otherwise let the Carbon
+                             // take care of it
+        (filamentStopped &&
+         (currentTime - startedAt > START_PRINTING_TIMEOUT_MS));  // wait N seconds since starting
 
     // Check if we should pause the print
     if (hasPauseCondition && webSocket.isConnected() && !waitingForAck &&
         printStatus == SDCP_PRINT_STATUS_PRINTING && hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING))
     {
-        logger.logf("currentZ: %f, movementTimeout: %d", currentZ, movementTimeout);
-        logger.logf("startedAt: %d", startedAt);
-        logger.logf("currentTime: %d", currentTime);
-        logger.logf("timeSinceStart: %d", currentTime - startedAt);
-        logger.logf("lastChangeTime: %d", lastChangeTime);
         logger.log("Pausing print, detected filament runout or stopped");
+        logger.logf("movementTimeout: %d", movementTimeout);
+        logger.logf("time since print started: %d", currentTime - startedAt);
+        logger.logf("last movement detected: %d", lastChangeTime);
         logger.logf("filamentRunout: %d, filamentStopped: %d", filamentRunout, filamentStopped);
         logger.logf("printStatus: %d, machineStatus: %d", printStatus,
                     hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING));
