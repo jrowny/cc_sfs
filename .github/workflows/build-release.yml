@@ -59,6 +59,12 @@ jobs:
         run: |
           mkdir -p artifacts
 
+          # Debug: List files in build directories
+          echo "Files in .pio/build/esp32dev/:"
+          ls -la .pio/build/esp32dev/
+          echo "Files in .pio/build/esp32-s3-devkitc-1/:"
+          ls -la .pio/build/esp32-s3-devkitc-1/
+
           # Copy merged binaries (created by merge_bin.py)
           cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
           cp .pio/build/esp32-s3-devkitc-1/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
