@@ -49,31 +49,21 @@ jobs:
           export CHIP_FAMILY="ESP32"
           pio run -e esp32dev
 
+          # Create artifacts directory and copy ESP32 firmware immediately
+          mkdir -p artifacts
+          cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
+
       - name: Build firmware for ESP32-S3
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
           pio run -e esp32-s3-devkitc-1
 
-      - name: Create release artifacts
-        run: |
-          mkdir -p artifacts
-
-          # Debug: Check current directory and find .pio directories
-          echo "Current directory: $(pwd)"
-          echo "Contents of current directory:"
-          ls -la
-          echo "Searching for .pio directories anywhere in workspace:"
-          find . -name ".pio" -type d 2>/dev/null || echo "No .pio directories found"
-          echo "Searching for any firmware_merged.bin files:"
-          find . -name "*firmware_merged.bin" -o -name "*merged.bin" 2>/dev/null || echo "No merged bin files found"
-          echo "All .bin files:"
-          find . -name "*.bin" 2>/dev/null || echo "No .bin files found"
-
-          # Copy merged binaries (created by merge_bin.py)
-          cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
+          # Copy ESP32-S3 firmware immediately after build
           cp .pio/build/esp32-s3-devkitc-1/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
 
+      - name: Create release artifacts
+        run: |
           # Create manifest.json for ESP Web Tools
           cat > artifacts/manifest.json << 'EOF'
           {
