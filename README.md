@@ -14,9 +14,9 @@ Setting the value too low, will mean that your prints might pause unexpectedly. 
 
 Note: the first layer uses 2 X Timeout because it is usually a slower flow layer and if you get a jam on your first layer, you're probably going to want to start over again anyway.
 
-## Parts List
+## Parts List (affiliate links)
 
-- Esp32 module, tested with [ESP32 Wroom modules](https://amzn.to/4kjtDbU) but prefer the [ESP32 S3 N16R8](https://amzn.to/4lqfTwE) for their performance.
+- [ESP32 S3 N16R8](https://amzn.to/4lqfTwE) for their performance, but really, any Esp32 module should work. Also tested with [ESP32 Wroom modules](https://amzn.to/4kjtDbU).
 - [Big Tree Tech SFS 2.0](https://amzn.to/40uZ1wN)
 
 ### Optional Parts
