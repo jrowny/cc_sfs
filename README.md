@@ -75,7 +75,7 @@ If you don't want to connect the device directly to the runout sensor, you may c
 
 The WebUI shows the current status, whether filament has runout or stopped. It can be accessed by IP address or by going to [ccxsfs20.local](http://ccxsfs20.local) if you have mdns enabled on your network.
 
-[ui screenshot](ui.png)
+![ui screenshot](ui.png)
 
 ## Setting the timeout (time without movement)
 
