@@ -2,17 +2,28 @@
 
 The Carbon Centauri is a great budget printer, but its filament runout sensor is a simple binary switch which cannot detect filament movement. This means the printer will print in mid-air if the filament gets tangled, breaks after the sensor, or fails to feed for any reason. This project aims to mitigate that issue.
 
+## Table of Contents
+
+- [Advanced Filament Sensor for the Elegoo Carbon Centauri](#advanced-filament-sensor-for-the-elegoo-carbon-centauri)
+  - [Table of Contents](#table-of-contents)
+  - [How it works](#how-it-works)
+  - [Parts List (affiliate links)](#parts-list-affiliate-links)
+    - [Optional Parts](#optional-parts)
+  - [Wiring (with stock runout detection)](#wiring-with-stock-runout-detection)
+  - [Alternate Wiring](#alternate-wiring)
+  - [Firmware Installation](#firmware-installation)
+  - [WebUi](#webui)
+  - [Setting the timeout (time without movement)](#setting-the-timeout-time-without-movement)
+  - [Known Issues / Todo](#known-issues--todo)
+  - [Updating](#updating)
+  - [Building from Source for unsupported boards](#building-from-source-for-unsupported-boards)
+  - [Development](#development)
+    - [Firmware](#firmware)
+    - [Web UI](#web-ui)
+
 ## How it works
 
 The Elegoo CC does not have an input for a filament movement sensor like the BTT SFS 2.0, but it does have an open websocket communication layer. Using a cheap off the shelf ESP32 with a Big Tree Tech SFS 2.0 as a replacment, we can track the status of the printer, detect that filament has stopped moving and send a Websocket command to pause the print. This is not as accurate as a direct firmware integration would be, and requires configuring a timeout relative to your print speed, but it can still save prints when configured correctly. The build is relatively simple, requiring only two GPIO pins, 5v, and ground connections.
-
-## Setting the timeout (time without movement)
-
-The BTT is meant to integrate with kipper or marlin firmware directly where the firmware knows how much filament _should_ be flowing. With the carbon, we can't know exactly how much it should be flowing, or at leaset, I haven't found a way. Therefore we use a timeout to aproximate how tolerant we should be to filament stopage. The BTT sensor reports an alternating value of HIGH/LOW (0/1) each time it detects the filament has moved 2.8mm. Each time it flips, we reset the timeout. If the value has not flipped after the timeout value has elapsed, the print is paused.
-
-Setting the value too low, will mean that your prints might pause unexpectedly. Setting the value too high means your print may not be savable. Settings that impact the flow of your print may also require you to retune this value. The only way I've found to do this so far is to set the value low, start a test print, and then increase it until it reliably prints without pausing.
-
-Note: the first layer uses 2 X Timeout because it is usually a slower flow layer and if you get a jam on your first layer, you're probably going to want to start over again anyway.
 
 ## Parts List (affiliate links)
 
@@ -24,7 +35,7 @@ Note: the first layer uses 2 X Timeout because it is usually a slower flow layer
 - [JST-XH 3-pin connectors](https://amzn.to/4l4m1Ll) OR [PCB mount connectors](https://amzn.to/4ns8Ntx). These are only required if you wish to retain the stock runout functionality by wiring directly to the existing runout connector.
 - [Electrocookie](https://amzn.to/4lqguyo) (or other) solderable PCB if you wish to do PCB mount connections rather than direct wiring
 
-### Wiring (with stock runout detection)
+## Wiring (with stock runout detection)
 
 _*WARNING:*_ Integrating with the stock wiring may void your Elegoo CC warranty. Do this at your own risk. Your printer may be different, make sure to validate with a multimeter before connecting any wires to the CC.
 
@@ -45,17 +56,33 @@ Connect the green wire from the SFS 2.0 to pin 13 on the ESP32
 
 ![Wiring Diagram](wiring.png)
 
-### Alternate wiring
+## Alternate Wiring
 
 If you don't want to connect the device directly to the runout sensor, you may choose to simply disable the runout built-in runout detection and rely entirely on this project to pause the print. In that case, you can power the project from USB and connect the SFS wires to to the ESP32. Red to 5v, green to pin 13, blue to pin 12, and black to ground.
 
-## Installation
+![Wiring Diagram without connecting to Carbon](wiring2.png)
+
+## Firmware Installation
 
 1. Flash the firmware and filesystem, this can be done through the [web tool](https://jonathanrowny.com/cc_sfs/)
 2. Once it's flashed, it will create a WiFi network called ElegooXBTTSFS20, connect to it with the password elegooccsfs20
 3. Go to http://192.168.4.1 in your browser to load the user interface
 4. Enter your wifi ssid, password, elegoo IP address and hit "save settings", the device will restart and connect to your network.
 5. Access the web UI at anytime by going to http;//ccxsfs20.local
+
+## WebUi
+
+The WebUI shows the current status, whether filament has runout or stopped. It can be accessed by IP address or by going to [ccxsfs20.local](http://ccxsfs20.local) if you have mdns enabled on your network.
+
+[ui screenshot](ui.png)
+
+## Setting the timeout (time without movement)
+
+The BTT is meant to integrate with kipper or marlin firmware directly where the firmware knows how much filament _should_ be flowing. With the carbon, we can't know exactly how much it should be flowing, or at leaset, I haven't found a way. Therefore we use a timeout to aproximate how tolerant we should be to filament stopage. The BTT sensor reports an alternating value of HIGH/LOW (0/1) each time it detects the filament has moved 2.8mm. Each time it flips, we reset the timeout. If the value has not flipped after the timeout value has elapsed, the print is paused.
+
+Setting the value too low, will mean that your prints might pause unexpectedly. Setting the value too high means your print may not be savable. Settings that impact the flow of your print may also require you to retune this value. The only way I've found to do this so far is to set the value low, start a test print, and then increase it until it reliably prints without pausing.
+
+Note: the first layer uses 2 X Timeout because it is usually a slower flow layer and if you get a jam on your first layer, you're probably going to want to start over again anyway.
 
 ## Known Issues / Todo
 
@@ -65,7 +92,7 @@ If you don't want to connect the device directly to the runout sensor, you may c
 
 ## Updating
 
-OTA updates are available in the interface or by reflashing via the web tool (coming soon).
+OTA updates are available in the interface or by reflashing via the web tool, however, flashing through the webtool will erase all settings. Updating over OTA, will not.
 
 ## Building from Source for unsupported boards
 
