@@ -11,22 +11,24 @@
 
 #define SPIFFS LittleFS
 
-// Define firmware version - will be set by build system
-#ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "dev"
-#endif
-const char* firmwareVersion = FIRMWARE_VERSION;
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
-// Define chip family - will be set by build system
-#ifndef CHIP_FAMILY
-#define CHIP_FAMILY "Unknown"
+#ifndef FIRMWARE_VERSION_RAW
+#define FIRMWARE_VERSION_RAW dev
 #endif
-const char* chipFamily = CHIP_FAMILY;
+#ifndef CHIP_FAMILY_RAW
+#define CHIP_FAMILY_RAW Unknown
+#endif
+
+const char* firmwareVersion = TOSTRING(FIRMWARE_VERSION_RAW);
+const char* chipFamily      = TOSTRING(CHIP_FAMILY_RAW);
+
 #define WIFI_CHECK_INTERVAL 30000     // Check WiFi every 30 seconds
 #define WIFI_RECONNECT_TIMEOUT 10000  // Wait 10 seconds for reconnection
 
 // NTP server to request epoch time
-const char *ntpServer = "pool.ntp.org";
+const char* ntpServer = "pool.ntp.org";
 
 WebServer webServer(80);
 
