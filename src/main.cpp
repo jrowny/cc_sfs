@@ -10,6 +10,18 @@
 #include "time.h"
 
 #define SPIFFS LittleFS
+
+// Define firmware version - will be set by build system
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "dev"
+#endif
+const char* firmwareVersion = FIRMWARE_VERSION;
+
+// Define chip family - will be set by build system
+#ifndef CHIP_FAMILY
+#define CHIP_FAMILY "Unknown"
+#endif
+const char* chipFamily = CHIP_FAMILY;
 #define WIFI_CHECK_INTERVAL 30000     // Check WiFi every 30 seconds
 #define WIFI_RECONNECT_TIMEOUT 10000  // Wait 10 seconds for reconnection
 
@@ -123,6 +135,8 @@ void setup()
 
     // Initialize logging system
     logger.log("ESP SFS System starting up...");
+    logger.logf("Firmware version: %s", firmwareVersion);
+    logger.logf("Chip family: %s", chipFamily);
 
     SPIFFS.begin();  // note: this must be done before wifi/server setup
     logger.log("LittleFS filesystem initialized");

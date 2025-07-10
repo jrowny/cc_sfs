@@ -7,6 +7,10 @@
 
 #define SPIFFS LittleFS
 
+// External reference to firmware version from main.cpp
+extern const char *firmwareVersion;
+extern const char *chipFamily;
+
 WebServer::WebServer(int port) : server(port) {}
 
 void WebServer::begin()
@@ -78,6 +82,21 @@ void WebServer::begin()
               [](AsyncWebServerRequest *request)
               {
                   String jsonResponse = logger.getLogsAsJson();
+                  request->send(200, "application/json", jsonResponse);
+              });
+
+    // Version endpoint
+    server.on("/version", HTTP_GET,
+              [](AsyncWebServerRequest *request)
+              {
+                  DynamicJsonDocument jsonDoc(256);
+                  jsonDoc["firmware_version"] = firmwareVersion;
+                  jsonDoc["chip_family"]      = chipFamily;
+                  jsonDoc["build_date"]       = __DATE__;
+                  jsonDoc["build_time"]       = __TIME__;
+
+                  String jsonResponse;
+                  serializeJson(jsonDoc, jsonResponse);
                   request->send(200, "application/json", jsonResponse);
               });
 
