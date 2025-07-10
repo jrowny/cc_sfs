@@ -45,13 +45,13 @@ jobs:
 
       - name: Build LittleFS filesystem for ESP32
         run: |
-          pio run --target buildfs -e esp32dev
+          pio run --target buildfs -e esp32dev --disable-auto-clean
 
       - name: Build firmware for ESP32
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32"
-          pio run -e esp32dev
+          pio run -e esp32dev --disable-auto-clean
 
           # Create artifacts directory and copy ESP32 firmware immediately
           mkdir -p artifacts
@@ -59,13 +59,13 @@ jobs:
 
       - name: Build LittleFS filesystem for ESP32-S3
         run: |
-          pio run --target buildfs -e esp32-s3-devkitc-1
+          pio run --target buildfs -e esp32-s3-devkitc-1 --disable-auto-clean
 
       - name: Build firmware for ESP32-S3
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
-          pio run -e esp32-s3-devkitc-1
+          pio run -e esp32-s3-devkitc-1 --disable-auto-clean
 
           # Copy ESP32-S3 firmware immediately after build
           cp .pio/build/esp32-s3-devkitc-1/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
