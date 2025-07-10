@@ -45,18 +45,21 @@ jobs:
 
       - name: Build firmware for ESP32
         run: |
+          cd $GITHUB_WORKSPACE
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32"
           pio run -e esp32dev
 
       - name: Build firmware for ESP32-S3
         run: |
+          cd $GITHUB_WORKSPACE
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
           pio run -e esp32-s3-devkitc-1
 
       - name: Create release artifacts
         run: |
+          cd $GITHUB_WORKSPACE
           mkdir -p artifacts
 
           # Debug: List files in build directories
