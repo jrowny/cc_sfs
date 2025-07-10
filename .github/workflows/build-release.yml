@@ -6,7 +6,7 @@ on:
       - "v*" # Triggers on tags like v1.0.0, v2.1.3, etc.
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -43,6 +43,10 @@ jobs:
           npm install
           npm run build
 
+      - name: Build LittleFS filesystem for ESP32
+        run: |
+          pio run --target buildfs -e esp32dev
+
       - name: Build firmware for ESP32
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
@@ -52,6 +56,10 @@ jobs:
           # Create artifacts directory and copy ESP32 firmware immediately
           mkdir -p artifacts
           cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
+
+      - name: Build LittleFS filesystem for ESP32-S3
+        run: |
+          pio run --target buildfs -e esp32-s3-devkitc-1
 
       - name: Build firmware for ESP32-S3
         run: |
@@ -144,11 +152,10 @@ jobs:
           </head>
           <body>
               <div class="container">
-                  <h1>ESP SFS Firmware Installer</h1>
+                  <h1>Esp -> Elegoo Carbon Centauri X BigTreeTech SFS Firmware Installer</h1>
                   
                   <div class="version-info">
                       <h3>Version: ${{ steps.get_version.outputs.version }}</h3>
-                      <p>This installer supports both ESP32 and ESP32-S3 devices.</p>
                   </div>
                   
                   <div class="install-section">
@@ -168,11 +175,6 @@ jobs:
                           </ul>
                       </div>
                   </div>
-                  
-                  <div class="note">
-                      <p><strong>Manual Installation:</strong></p>
-                      <p>If you prefer manual installation, download the firmware files above and use esptool or your preferred flashing tool.</p>
-                  </div>
               </div>
               
               <script
@@ -185,6 +187,8 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        with:
+          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
