@@ -45,28 +45,30 @@ jobs:
 
       - name: Build firmware for ESP32
         run: |
-          cd $GITHUB_WORKSPACE
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32"
           pio run -e esp32dev
 
       - name: Build firmware for ESP32-S3
         run: |
-          cd $GITHUB_WORKSPACE
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
           pio run -e esp32-s3-devkitc-1
 
       - name: Create release artifacts
         run: |
-          cd $GITHUB_WORKSPACE
           mkdir -p artifacts
 
-          # Debug: List files in build directories
-          echo "Files in .pio/build/esp32dev/:"
-          ls -la .pio/build/esp32dev/
-          echo "Files in .pio/build/esp32-s3-devkitc-1/:"
-          ls -la .pio/build/esp32-s3-devkitc-1/
+          # Debug: Check current directory and find .pio directories
+          echo "Current directory: $(pwd)"
+          echo "Contents of current directory:"
+          ls -la
+          echo "Searching for .pio directories anywhere in workspace:"
+          find . -name ".pio" -type d 2>/dev/null || echo "No .pio directories found"
+          echo "Searching for any firmware_merged.bin files:"
+          find . -name "*firmware_merged.bin" -o -name "*merged.bin" 2>/dev/null || echo "No merged bin files found"
+          echo "All .bin files:"
+          find . -name "*.bin" 2>/dev/null || echo "No .bin files found"
 
           # Copy merged binaries (created by merge_bin.py)
           cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
