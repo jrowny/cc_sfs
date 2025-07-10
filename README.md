@@ -14,6 +14,7 @@ The Carbon Centauri is a great budget printer, but its filament runout sensor is
   - [Firmware Installation](#firmware-installation)
   - [WebUi](#webui)
   - [Setting the timeout (time without movement)](#setting-the-timeout-time-without-movement)
+  - [3D printed case/adapter](#3d-printed-caseadapter)
   - [Known Issues / Todo](#known-issues--todo)
   - [Updating](#updating)
   - [Building from Source for unsupported boards](#building-from-source-for-unsupported-boards)
@@ -83,6 +84,10 @@ The BTT is meant to integrate with kipper or marlin firmware directly where the 
 Setting the value too low, will mean that your prints might pause unexpectedly. Setting the value too high means your print may not be savable. Settings that impact the flow of your print may also require you to retune this value. The only way I've found to do this so far is to set the value low, start a test print, and then increase it until it reliably prints without pausing.
 
 Note: the first layer uses 2 X Timeout because it is usually a slower flow layer and if you get a jam on your first layer, you're probably going to want to start over again anyway.
+
+## 3D printed case/adapter
+
+The files are available in [models](/models) directory or on [MakerWorld](https://makerworld.com/en/models/1594174-carbon-centauri-x-bigtreetech-sfs-2-0-mod)
 
 ## Known Issues / Todo
 
