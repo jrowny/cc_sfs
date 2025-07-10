@@ -51,15 +51,17 @@ If you don't want to connect the device directly to the runout sensor, you may c
 
 ## Installation
 
-1. Flash the firmware and filesystem, this can be done through our web tool
-2. Once connected to your network, set the IP address of your elegooCC
-3. Done!
+1. Flash the firmware and filesystem, this can be done through the [web tool](https://jonathanrowny.com/cc_sfs/)
+2. Once it's flashed, it will create a WiFi network called ElegooXBTTSFS20, connect to it with the password elegooccsfs20
+3. Go to http://192.168.4.1 in your browser to load the user interface
+4. Enter your wifi ssid, password, elegoo IP address and hit "save settings", the device will restart and connect to your network.
+5. Access the web UI at anytime by going to http;//ccxsfs20.local
 
 ## Known Issues / Todo
 
-[] web flashing tool, update from GH rather than using easyota
-[] use UDP ping to find/update Elegoo CC ip address like octoeverywhere does
-[] maybe integrate with octoeverywhere as an alternative client, so you don't need another rpi or docker container?
+- [ ] update from GH rather than using easyota
+- [ ] use UDP ping to find/update Elegoo CC ip address like octoeverywhere does
+- [ ] maybe integrate with octoeverywhere as an alternative client, so you don't need another rpi or docker container?
 
 ## Updating
 
