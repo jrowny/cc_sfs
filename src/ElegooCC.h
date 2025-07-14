@@ -138,6 +138,10 @@ class ElegooCC
     // Helper methods for machine status bitmask
     bool hasMachineStatus(sdcp_machine_status_t status);
     void setMachineStatuses(const int *statusArray, int arraySize);
+    bool isPrinting();
+    bool shouldPausePrint(unsigned long currentTime);
+    void checkFilamentMovement(unsigned long currentTime);
+    void checkFilamentRunout(unsigned long currentTime);
 
    public:
     // Singleton access method

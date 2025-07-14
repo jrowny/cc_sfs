@@ -40,6 +40,9 @@ ElegooCC::ElegooCC()
     pendingAckRequestId = "";
     ackWaitStartTime    = 0;
 
+    // TODO: send a UDP broadcast, M99999 on Port 30000, maybe using AsyncUDP.h and listen for the
+    // result. this will give us the printer IP address.
+
     // event handler - use lambda to capture 'this' pointer
     webSocket.onEvent([this](WStype_t type, uint8_t *payload, size_t length)
                       { this->webSocketEvent(type, payload, length); });
@@ -280,12 +283,12 @@ void ElegooCC::connect()
 
 void ElegooCC::loop()
 {
-    // Check WiFi connection periodically
     unsigned long currentTime = millis();
 
     if (webSocket.isConnected())
     {
         // Check for acknowledgment timeout (5 seconds)
+        // TODO: need to check the actual requestId
         if (waitingForAck && (currentTime - ackWaitStartTime) >= ACK_TIMEOUT_MS)
         {
             logger.logf("Acknowledgment timeout for command %d, resetting ack state",
@@ -310,10 +313,36 @@ void ElegooCC::loop()
         }
     }
 
+    checkFilamentMovement(currentTime);
+
+    // Check if we should pause the print
+    if (shouldPausePrint(currentTime))
+    {
+        logger.log("Pausing print, detected filament runout or stopped");
+        pausePrint();
+    }
+
+    webSocket.loop();
+}
+
+void ElegooCC::checkFilamentRunout(unsigned long currentTime)
+{
+    // The signal output of the switch sensor is at low level when no filament is detected
+    bool newFilamentRunout = digitalRead(FILAMENT_RUNOUT_PIN) == LOW;
+    if (newFilamentRunout != filamentRunout)
+    {
+        logger.log(filamentRunout ? "Filament has run out" : "Filament has been detected");
+    }
+    filamentRunout = newFilamentRunout;
+}
+
+void ElegooCC::checkFilamentMovement(unsigned long currentTime)
+{
     int currentMovementValue = digitalRead(MOVEMENT_SENSOR_PIN);
 
-    // CurrentLayer is unreliable when using Orcaslicer, because it relies on g-code,so we use Z
-    // instead. , assuming first layer is at Z offset <  0.1
+    // CurrentLayer is unreliable when using Orcaslicer 2.3.0, because it is missing some g-code,so
+    // we use Z instead. , assuming first layer is at Z offset <  0.1
+    // TODO: make this configurable
     int movementTimeout =
         currentZ < 0.1 ? settingsManager.getTimeout() * 2 : settingsManager.getTimeout();
 
@@ -339,38 +368,27 @@ void ElegooCC::loop()
             filamentStopped = true;  // Prevent repeated printing
         }
     }
+}
 
-    // The signal output of the switch sensor is at low level when no filament is detected
-    bool newFilamentRunout = digitalRead(FILAMENT_RUNOUT_PIN) == LOW;
-    if (newFilamentRunout != filamentRunout)
+bool ElegooCC::shouldPausePrint(unsigned long currentTime)
+{
+    // Don't pause in the first 10 seconds
+    // Don't pause if the websocket is not connected (we can't pause anyway if we're not connected)
+    // Don't pause if we're waiting for an ack
+    // Don't pause if we have less than 100t tickets left, the print is probably done
+    // TODO: also add a buffer after pause because sometimes an ack comes before the update
+    if (currentTime - startedAt > START_PRINTING_TIMEOUT_MS || !webSocket.isConnected() ||
+        waitingForAck || !isPrinting() || (totalTicks - currentTicks) < 100)
     {
-        logger.log(filamentRunout ? "Filament has run out" : "Filament has been detected");
-    }
-    filamentRunout = newFilamentRunout;
-
-    // a pause condition is if the filament ran out or the filament stopped moving
-    bool hasPauseCondition =
-        (settingsManager.getPauseOnRunout() &&
-         filamentRunout) ||  // only pause if pause on runout is enabled, otherwise let the Carbon
-                             // take care of it
-        (filamentStopped &&
-         (currentTime - startedAt > START_PRINTING_TIMEOUT_MS));  // wait N seconds since starting
-
-    // Check if we should pause the print
-    if (hasPauseCondition && webSocket.isConnected() && !waitingForAck &&
-        printStatus == SDCP_PRINT_STATUS_PRINTING && hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING))
-    {
-        logger.log("Pausing print, detected filament runout or stopped");
-        logger.logf("movementTimeout: %d", movementTimeout);
-        logger.logf("time since print started: %d", currentTime - startedAt);
-        logger.logf("last movement detected: %d", lastChangeTime);
-        logger.logf("filamentRunout: %d, filamentStopped: %d", filamentRunout, filamentStopped);
-        logger.logf("printStatus: %d, machineStatus: %d", printStatus,
-                    hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING));
-        pausePrint();
+        return false;
     }
 
-    webSocket.loop();
+    return (settingsManager.getPauseOnRunout() && filamentRunout) || filamentStopped;
+}
+
+bool ElegooCC::isPrinting()
+{
+    return SDCP_PRINT_STATUS_PRINTING && hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING);
 }
 
 // Helper methods for machine status bitmask
@@ -400,7 +418,7 @@ printer_info_t ElegooCC::getCurrentInformation()
     info.filamentRunout       = filamentRunout;
     info.mainboardID          = mainboardID;
     info.printStatus          = printStatus;
-    info.isPrinting           = hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING);
+    info.isPrinting           = isPrinting();
     info.currentLayer         = currentLayer;
     info.totalLayer           = totalLayer;
     info.progress             = progress;

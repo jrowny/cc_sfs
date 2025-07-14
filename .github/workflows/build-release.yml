@@ -43,32 +43,32 @@ jobs:
           npm install
           npm run build
 
-      - name: Build LittleFS filesystem for ESP32
+      - name: Build LittleFS filesystem for ESP32 # TODO: figure out if we need different lifflefs file system for both chips.
         run: |
-          pio run --target buildfs -e esp32dev --disable-auto-clean
+          pio run --target buildfs -e esp32-build --disable-auto-clean
 
       - name: Build firmware for ESP32
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32"
-          pio run -e esp32dev --disable-auto-clean
+          pio run -e esp32-build --disable-auto-clean
 
           # Create artifacts directory and copy ESP32 firmware immediately
           mkdir -p artifacts
-          cp .pio/build/esp32dev/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
+          cp .pio/build/esp32-build/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
 
       - name: Build LittleFS filesystem for ESP32-S3
         run: |
-          pio run --target buildfs -e esp32-s3-devkitc-1 --disable-auto-clean
+          pio run --target buildfs -e esp32-s3-build --disable-auto-clean
 
       - name: Build firmware for ESP32-S3
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
-          pio run -e esp32-s3-devkitc-1 --disable-auto-clean
+          pio run -e esp32-s3-build-1 --disable-auto-clean
 
           # Copy ESP32-S3 firmware immediately after build
-          cp .pio/build/esp32-s3-devkitc-1/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
+          cp .pio/build/esp32-s3-build/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
 
       - name: Create release artifacts
         run: |
