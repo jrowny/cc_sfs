@@ -313,7 +313,9 @@ void ElegooCC::loop()
         }
     }
 
+    // Before determining if we should pause, check if the filament is moving or it ran out
     checkFilamentMovement(currentTime);
+    checkFilamentRunout(currentTime);
 
     // Check if we should pause the print
     if (shouldPausePrint(currentTime))
@@ -377,7 +379,7 @@ bool ElegooCC::shouldPausePrint(unsigned long currentTime)
     // Don't pause if we're waiting for an ack
     // Don't pause if we have less than 100t tickets left, the print is probably done
     // TODO: also add a buffer after pause because sometimes an ack comes before the update
-    if (currentTime - startedAt > START_PRINTING_TIMEOUT_MS || !webSocket.isConnected() ||
+    if (currentTime - startedAt < START_PRINTING_TIMEOUT_MS || !webSocket.isConnected() ||
         waitingForAck || !isPrinting() || (totalTicks - currentTicks) < 100)
     {
         return false;
@@ -388,7 +390,8 @@ bool ElegooCC::shouldPausePrint(unsigned long currentTime)
 
 bool ElegooCC::isPrinting()
 {
-    return SDCP_PRINT_STATUS_PRINTING && hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING);
+    return printStatus == SDCP_PRINT_STATUS_PRINTING &&
+           hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING);
 }
 
 // Helper methods for machine status bitmask
