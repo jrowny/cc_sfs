@@ -97,7 +97,7 @@ The files are available in [models](/models) directory or on [MakerWorld](https:
 
 ## Updating
 
-OTA updates are available in the interface or by reflashing via the web tool, however, flashing through the webtool will erase all settings. Updating over OTA, will not.
+Updates are available in the web ui in the update tab or by reflashing via the web tool, however, flashing through the webtool will erase all settings. Updating using the update section of the web ui will not override your settings as long as you use the `firmware-only.bin` from the [releases page](https://github.com/jrowny/cc_sfs/releases).
 
 ## Building from Source for unsupported boards
 

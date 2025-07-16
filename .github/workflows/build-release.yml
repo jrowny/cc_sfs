@@ -55,7 +55,8 @@ jobs:
 
           # Create artifacts directory and copy ESP32 firmware immediately
           mkdir -p artifacts
-          cp .pio/build/esp32-build/firmware_merged.bin artifacts/firmware-esp32-${{ steps.get_version.outputs.version }}.bin
+          cp .pio/build/esp32-build/firmware_merged.bin artifacts/esp32-${{ steps.get_version.outputs.version }}-full.bin
+          cp .pio/build/esp32-build/firmware.bin artifacts/esp32-${{ steps.get_version.outputs.version }}-firmware-only.bin
 
       - name: Build LittleFS filesystem for ESP32-S3
         run: |
@@ -68,7 +69,8 @@ jobs:
           pio run -e esp32-s3-build --disable-auto-clean
 
           # Copy ESP32-S3 firmware immediately after build
-          cp .pio/build/esp32-s3-build/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
+          cp .pio/build/esp32-s3-build/firmware_merged.bin artifacts/esp32s3-${{ steps.get_version.outputs.version }}-full.bin
+          cp .pio/build/esp32-s3-build/firmware.bin artifacts/esp32s3-${{ steps.get_version.outputs.version }}-firmware-only.bin
 
       - name: Create release artifacts
         run: |
@@ -82,13 +84,13 @@ jobs:
               {
                 "chipFamily": "ESP32",
                 "parts": [
-                  { "path": "firmware-esp32-${{ steps.get_version.outputs.version }}.bin", "offset": 0 }
+                  { "path": "esp32-${{ steps.get_version.outputs.version }}-full.bin", "offset": 0 }
                 ]
               },
               {
                 "chipFamily": "ESP32-S3",
                 "parts": [
-                  { "path": "firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin", "offset": 0 }
+                  { "path": "esp32s3-${{ steps.get_version.outputs.version }}-full.bin", "offset": 0 }
                 ]
               }
             ]
