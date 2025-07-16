@@ -65,7 +65,7 @@ jobs:
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
           export CHIP_FAMILY="ESP32-S3"
-          pio run -e esp32-s3-build-1 --disable-auto-clean
+          pio run -e esp32-s3-build --disable-auto-clean
 
           # Copy ESP32-S3 firmware immediately after build
           cp .pio/build/esp32-s3-build/firmware_merged.bin artifacts/firmware-esp32s3-${{ steps.get_version.outputs.version }}.bin
