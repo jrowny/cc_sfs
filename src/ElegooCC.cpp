@@ -366,7 +366,8 @@ void ElegooCC::checkFilamentMovement(unsigned long currentTime)
         // Value hasn't changed, check if timeout has elapsed
         if ((currentTime - lastChangeTime) >= movementTimeout && !filamentStopped)
         {
-            logger.log("Filament movement stopped");
+            logger.logf("Filament movement stopped, last movement detected %dms ago",
+                        currentTime - lastChangeTime);
             filamentStopped = true;  // Prevent repeated printing
         }
     }
@@ -374,18 +375,30 @@ void ElegooCC::checkFilamentMovement(unsigned long currentTime)
 
 bool ElegooCC::shouldPausePrint(unsigned long currentTime)
 {
+    // Only puase if getPauseOnRunout is enabled and filement runsout or filamentStopped.
+    bool pauseCondition = (settingsManager.getPauseOnRunout() && filamentRunout) || filamentStopped;
+
     // Don't pause in the first 10 seconds
     // Don't pause if the websocket is not connected (we can't pause anyway if we're not connected)
     // Don't pause if we're waiting for an ack
     // Don't pause if we have less than 100t tickets left, the print is probably done
     // TODO: also add a buffer after pause because sometimes an ack comes before the update
     if (currentTime - startedAt < START_PRINTING_TIMEOUT_MS || !webSocket.isConnected() ||
-        waitingForAck || !isPrinting() || (totalTicks - currentTicks) < 100)
+        waitingForAck || !isPrinting() || (totalTicks - currentTicks) < 100 || !pauseCondition)
     {
         return false;
     }
 
-    return (settingsManager.getPauseOnRunout() && filamentRunout) || filamentStopped;
+    // log why we paused...
+    logger.logf("Pause condition: %d", pauseCondition);
+    logger.logf("Filament runout: %d", filamentRunout);
+    logger.logf("Filament runout pause enabled: %d", settingsManager.getPauseOnRunout());
+    logger.logf("Filament stopped: %d", filamentStopped);
+    logger.logf("Time since print start %d", currentTime - startedAt);
+    logger.logf("Is Machine status printing?: %d", hasMachineStatus(SDCP_MACHINE_STATUS_PRINTING));
+    logger.logf("Print status: %d", printStatus);
+
+    return true;
 }
 
 bool ElegooCC::isPrinting()
