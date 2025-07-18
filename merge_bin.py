@@ -1,6 +1,7 @@
 # originally from here: https://github.com/platformio/platform-espressif32/issues/1078#issuecomment-1636793463
 Import("env")
 import os
+from os.path import join
 
 APP_BIN = "$BUILD_DIR/${PROGNAME}.bin"
 LITTLEFS_BIN = "$BUILD_DIR/littlefs.bin"
@@ -31,7 +32,18 @@ def get_littlefs_partition_address(env):
             
             # Fallback to default partition table
             if not partitions_csv:
-                partitions_csv = os.path.join(framework_dir, "tools", "partitions", "default.csv")
+                # Check flash size to determine which default partition table to use
+                flash_size = BOARD_CONFIG.get("upload.flash_size", "4MB")
+                print(f"Board flash size: {flash_size}")
+                
+                # TODO: make this less dumb
+                if flash_size == "8MB":
+                    default_csv = "default_8MB.csv"
+                else:
+                    default_csv = "default.csv"
+                
+                print(f"Getting partitions from default {os.path.join(framework_dir, "tools", "partitions", default_csv)}")
+                partitions_csv = os.path.join(framework_dir, "tools", "partitions", default_csv)
         
         # If we still don't have a partition table file, try to get it from the build process
         if not partitions_csv or not os.path.exists(partitions_csv):
@@ -72,6 +84,14 @@ def get_littlefs_partition_address(env):
         return "0x3d0000"
 
 
+def build_littlefs(source, target, env):
+    """Build LittleFS filesystem before main build"""
+    print("Building LittleFS filesystem...")
+        
+    # Build the LittleFS partition with --disable-auto-clean to prevent cleanup
+    env.Execute("$PYTHONEXE -m platformio run -e $PIOENV --target buildfs --disable-auto-clean")
+
+
 def merge_bin(source, target, env):
     # Get the dynamic LittleFS partition address
     littlefs_address = get_littlefs_partition_address(env)
@@ -98,13 +118,18 @@ def merge_bin(source, target, env):
         )
     )
 
+# Add a pre-action to build LittleFS before main build
+env.AddPreAction(APP_BIN, build_littlefs)
+
 # Add a post action that runs esptoolpy to merge available flash images
 env.AddPostAction(APP_BIN , merge_bin)
 
 # Patch the upload command to flash the merged binary at address 0x0
 env.Replace(
     UPLOADERFLAGS=[
+        "write_flash"
         ]
         + ["0x0", MERGED_BIN],
     UPLOADCMD='"$PYTHONEXE" "$UPLOADER" $UPLOADERFLAGS',
 )
+
