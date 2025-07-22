@@ -26,9 +26,11 @@ The Carbon Centauri is a great budget printer, but its filament runout sensor is
 
 The Elegoo CC does not have an input for a filament movement sensor like the BTT SFS 2.0, but it does have an open websocket communication layer. Using a cheap off the shelf ESP32 with a Big Tree Tech SFS 2.0 as a replacment, we can track the status of the printer, detect that filament has stopped moving and send a Websocket command to pause the print. This is not as accurate as a direct firmware integration would be, and requires configuring a timeout relative to your print speed, but it can still save prints when configured correctly. The build is relatively simple, requiring only two GPIO pins, 5v, and ground connections.
 
+[![Tutorial video for building this mod](https://img.youtube.com/vi/6JYKpZ3HX2Y/0.jpg)](https://www.youtube.com/watch?v=6JYKpZ3HX2Y)
+
 ## Parts List (affiliate links)
 
-- [ESP32 S3 N16R8](https://amzn.to/4lqfTwE) for their performance, but really, any Esp32 module should work. Also tested with [ESP32 Wroom modules](https://amzn.to/4kjtDbU).
+- [ESP32 S3 N8R2](https://amzn.to/4lHsUTo) for their performance, but really, any Esp32 module should work. Also tested with 4mb [ESP32 Wroom modules](https://amzn.to/4kjtDbU).
 - [Big Tree Tech SFS 2.0](https://amzn.to/40uZ1wN)
 
 ### Optional Parts
