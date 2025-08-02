@@ -6,7 +6,6 @@
 #include "SettingsManager.h"
 
 #define ACK_TIMEOUT_MS 5000
-#define START_PRINTING_TIMEOUT_MS 10000
 
 // External function to get current time (from main.cpp)
 extern unsigned long getTime();
@@ -375,16 +374,30 @@ void ElegooCC::checkFilamentMovement(unsigned long currentTime)
 
 bool ElegooCC::shouldPausePrint(unsigned long currentTime)
 {
-    // Only puase if getPauseOnRunout is enabled and filement runsout or filamentStopped.
-    bool pauseCondition = (settingsManager.getPauseOnRunout() && filamentRunout) || filamentStopped;
+    // If pause function is completely disabled, always return false
+    if (!settingsManager.getEnabled())
+    {
+        return false;
+    }
 
-    // Don't pause in the first 10 seconds
+    if (filamentRunout && !settingsManager.getPauseOnRunout())
+    {
+        // if pause on runout is disabled, and filament ran out, skip checking everything else
+        // this should let the carbon take care of itself
+        return false;
+    }
+
+    // Only puase if getPauseOnRunout is enabled and filement runsout or filamentStopped.
+    bool pauseCondition = filamentRunout || filamentStopped;
+
+    // Don't pause in the first X milliseconds (configurable in settings)
     // Don't pause if the websocket is not connected (we can't pause anyway if we're not connected)
     // Don't pause if we're waiting for an ack
     // Don't pause if we have less than 100t tickets left, the print is probably done
     // TODO: also add a buffer after pause because sometimes an ack comes before the update
-    if (currentTime - startedAt < START_PRINTING_TIMEOUT_MS || !webSocket.isConnected() ||
-        waitingForAck || !isPrinting() || (totalTicks - currentTicks) < 100 || !pauseCondition)
+    if (currentTime - startedAt < settingsManager.getStartPrintTimeout() ||
+        !webSocket.isConnected() || waitingForAck || !isPrinting() ||
+        (totalTicks - currentTicks) < 100 || !pauseCondition)
     {
         return false;
     }

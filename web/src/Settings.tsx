@@ -5,11 +5,13 @@ function Settings() {
   const [password, setPassword] = createSignal('')
   const [elegooip, setElegooip] = createSignal('')
   const [timeout, setTimeoutValue] = createSignal(2000)
+  const [startPrintTimeout, setStartPrintTimeout] = createSignal(10000)
   const [loading, setLoading] = createSignal(true)
   const [error, setError] = createSignal('')
   const [saveSuccess, setSaveSuccess] = createSignal(false)
   const [apMode, setApMode] = createSignal<boolean | null>(null);
   const [pauseOnRunout, setPauseOnRunout] = createSignal(true);
+  const [enabled, setEnabled] = createSignal(true);
   // Load settings from the server and scan for WiFi networks
   onMount(async () => {
     try {
@@ -27,8 +29,10 @@ function Settings() {
       setPassword('')
       setElegooip(settings.elegooip || '')
       setTimeoutValue(settings.timeout || 2000)
+      setStartPrintTimeout(settings.start_print_timeout || 10000)
       setApMode(settings.ap_mode || null)
       setPauseOnRunout(settings.pause_on_runout !== undefined ? settings.pause_on_runout : true)
+      setEnabled(settings.enabled || true)
 
       setError('')
     } catch (err: any) {
@@ -52,6 +56,8 @@ function Settings() {
         elegooip: elegooip(),
         timeout: timeout(),
         pause_on_runout: pauseOnRunout(),
+        start_print_timeout: startPrintTimeout(),
+        enabled: enabled(),
       }
 
       const response = await fetch('/update_settings', {
@@ -168,6 +174,21 @@ function Settings() {
           </fieldset>
 
           <fieldset class="fieldset">
+            <legend class="fieldset-legend">Start Print Timeout</legend>
+            <input
+              type="number"
+              id="startPrintTimeout"
+              value={startPrintTimeout()}
+              onInput={(e) => setStartPrintTimeout(parseInt(e.target.value) || 10000)}
+              min="1000"
+              max="60000"
+              step="1000"
+              class="input"
+            />
+            <p class="label">Time in milliseconds to wait after print starts before allowing pause on filament runout</p>
+          </fieldset>
+
+          <fieldset class="fieldset">
             <legend class="fieldset-legend">Pause on Runout</legend>
             <label class="label cursor-pointer">
               <input
@@ -178,6 +199,21 @@ function Settings() {
                 class="checkbox checkbox-accent"
               />
               <span class="label-text">Pause printing when filament runs out, rather than letting the Elegoo Centauri Carbon handle the runout</span>
+
+            </label>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Enabled</legend>
+            <label class="label cursor-pointer">
+              <input
+                type="checkbox"
+                id="enabled"
+                checked={enabled()}
+                onChange={(e) => setEnabled(e.target.checked)}
+                class="checkbox checkbox-accent"
+              />
+              <span class="label-text">When unchecked, it will completely disable pausing, useful for prints with ironing</span>
 
             </label>
           </fieldset>

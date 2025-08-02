@@ -12,6 +12,8 @@ struct user_settings
     String elegooip;
     int    timeout;
     bool   pause_on_runout;
+    int    start_print_timeout;
+    bool   enabled;
 };
 
 class SettingsManager
@@ -44,6 +46,8 @@ class SettingsManager
     String getElegooIP();
     int    getTimeout();
     bool   getPauseOnRunout();
+    int    getStartPrintTimeout();
+    bool   getEnabled();
 
     void setSSID(const String &ssid);
     void setPassword(const String &password);
@@ -51,6 +55,8 @@ class SettingsManager
     void setElegooIP(const String &ip);
     void setTimeout(int timeout);
     void setPauseOnRunout(bool pauseOnRunout);
+    void setStartPrintTimeout(int timeoutMs);
+    void setEnabled(bool enabled);
 
     String toJson(bool includePassword = true);
 };

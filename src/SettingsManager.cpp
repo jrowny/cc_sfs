@@ -15,13 +15,15 @@ SettingsManager &SettingsManager::getInstance()
 
 SettingsManager::SettingsManager()
 {
-    isLoaded                 = false;
-    settings.ap_mode         = false;
-    settings.ssid            = "";
-    settings.passwd          = "";
-    settings.elegooip        = "";
-    settings.timeout         = 2000;
-    settings.pause_on_runout = true;
+    isLoaded                     = false;
+    settings.ap_mode             = false;
+    settings.ssid                = "";
+    settings.passwd              = "";
+    settings.elegooip            = "";
+    settings.timeout             = 2000;
+    settings.pause_on_runout     = true;
+    settings.start_print_timeout = 10000;
+    settings.enabled             = true;
 }
 
 bool SettingsManager::load()
@@ -45,12 +47,14 @@ bool SettingsManager::load()
         return false;
     }
 
-    settings.ap_mode         = doc["ap_mode"] | false;
-    settings.ssid            = doc["ssid"] | "";
-    settings.passwd          = doc["passwd"] | "";
-    settings.elegooip        = doc["elegooip"] | "";
-    settings.timeout         = doc["timeout"] | 2000;
-    settings.pause_on_runout = doc["pause_on_runout"] | true;
+    settings.ap_mode             = doc["ap_mode"] | false;
+    settings.ssid                = doc["ssid"] | "";
+    settings.passwd              = doc["passwd"] | "";
+    settings.elegooip            = doc["elegooip"] | "";
+    settings.timeout             = doc["timeout"] | 2000;
+    settings.pause_on_runout     = doc["pause_on_runout"] | true;
+    settings.enabled             = doc["enabled"] | true;
+    settings.start_print_timeout = doc["start_print_timeout"] | 10000;
 
     isLoaded = true;
     return true;
@@ -124,6 +128,16 @@ bool SettingsManager::getPauseOnRunout()
     return getSettings().pause_on_runout;
 }
 
+int SettingsManager::getStartPrintTimeout()
+{
+    return getSettings().start_print_timeout;
+}
+
+bool SettingsManager::getEnabled()
+{
+    return getSettings().enabled;
+}
+
 void SettingsManager::setSSID(const String &ssid)
 {
     if (!isLoaded)
@@ -178,16 +192,32 @@ void SettingsManager::setPauseOnRunout(bool pauseOnRunout)
     settings.pause_on_runout = pauseOnRunout;
 }
 
+void SettingsManager::setStartPrintTimeout(int timeoutMs)
+{
+    if (!isLoaded)
+        load();
+    settings.start_print_timeout = timeoutMs;
+}
+
+void SettingsManager::setEnabled(bool enabled)
+{
+    if (!isLoaded)
+        load();
+    settings.enabled = enabled;
+}
+
 String SettingsManager::toJson(bool includePassword)
 {
     String                   output;
     StaticJsonDocument<1024> doc;
 
-    doc["ap_mode"]         = settings.ap_mode;
-    doc["ssid"]            = settings.ssid;
-    doc["elegooip"]        = settings.elegooip;
-    doc["timeout"]         = settings.timeout;
-    doc["pause_on_runout"] = settings.pause_on_runout;
+    doc["ap_mode"]             = settings.ap_mode;
+    doc["ssid"]                = settings.ssid;
+    doc["elegooip"]            = settings.elegooip;
+    doc["timeout"]             = settings.timeout;
+    doc["pause_on_runout"]     = settings.pause_on_runout;
+    doc["start_print_timeout"] = settings.start_print_timeout;
+    doc["enabled"]             = settings.enabled;
 
     if (includePassword)
     {

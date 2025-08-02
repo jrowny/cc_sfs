@@ -96,10 +96,12 @@ The files are available in [models](/models) directory or on [MakerWorld](https:
 
 ## Known Issues / Todo
 
+- [ ] Prints with ironing will fail, as there is no filament movement
 - [ ] update from GH rather than using easyota
 - [ ] use UDP ping to find/update Elegoo CC ip address like octoeverywhere does
 - [ ] maybe integrate with octoeverywhere as an alternative client, so you don't need another rpi or docker container?
 - [ ] support more boards like the Seeed Studio XIAO S3
+- [ ] printhead cover fall protection
 
 ## Updating
 

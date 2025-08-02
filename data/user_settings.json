@@ -4,5 +4,7 @@
   "timeout": 2000,
   "elegooip": "192.168.1.123",
   "pause_on_runout": true,
-  "ap_mode": true
+  "ap_mode": true,
+  "start_print_timeout": 10000,
+  "enabled": true
 }
