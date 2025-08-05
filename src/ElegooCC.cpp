@@ -284,6 +284,12 @@ void ElegooCC::loop()
 {
     unsigned long currentTime = millis();
 
+    // websocket IP changed, reconnect
+    if (ipAddress != settingsManager.getElegooIP())
+    {
+        connect();  // this will reconnnect if already connected
+    }
+
     if (webSocket.isConnected())
     {
         // Check for acknowledgment timeout (5 seconds)
@@ -296,11 +302,6 @@ void ElegooCC::loop()
             pendingAckCommand   = -1;
             pendingAckRequestId = "";
             ackWaitStartTime    = 0;
-        }
-        // websocket IP changed, reconnect
-        if (ipAddress != settingsManager.getElegooIP())
-        {
-            connect();  // this will reconnnect if already connected
         }
         else if (currentTime - lastPing > 29900)
         {
