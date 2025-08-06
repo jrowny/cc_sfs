@@ -9,9 +9,14 @@
 
 #define CARBON_CENTAURI_PORT 3030
 
-// Pin definitions
+// Pin definitions - can be overridden via build flags
+#ifndef FILAMENT_RUNOUT_PIN
 #define FILAMENT_RUNOUT_PIN 12
+#endif
+
+#ifndef MOVEMENT_SENSOR_PIN
 #define MOVEMENT_SENSOR_PIN 13
+#endif
 
 // Status codes
 typedef enum
