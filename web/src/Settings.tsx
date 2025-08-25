@@ -32,7 +32,7 @@ function Settings() {
       setStartPrintTimeout(settings.start_print_timeout || 10000)
       setApMode(settings.ap_mode || null)
       setPauseOnRunout(settings.pause_on_runout !== undefined ? settings.pause_on_runout : true)
-      setEnabled(settings.enabled || true)
+      setEnabled(settings.enabled !== undefined ? settings.enabled : true)
 
       setError('')
     } catch (err: any) {
