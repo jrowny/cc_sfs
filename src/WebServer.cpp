@@ -42,6 +42,7 @@ void WebServer::begin()
             settingsManager.setTimeout(jsonObj["timeout"].as<int>());
             settingsManager.setPauseOnRunout(jsonObj["pause_on_runout"].as<bool>());
             settingsManager.setEnabled(jsonObj["enabled"].as<bool>());
+            settingsManager.setStartPrintTimeout(jsonObj["start_print_timeout"].as<int>());
             settingsManager.save();
             jsonObj.clear();
             request->send(200, "text/plain", "ok");
