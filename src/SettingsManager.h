@@ -11,6 +11,7 @@ struct user_settings
     bool   ap_mode;
     String elegooip;
     int    timeout;
+    int    first_layer_timeout;
     bool   pause_on_runout;
     int    start_print_timeout;
     bool   enabled;
@@ -46,6 +47,7 @@ class SettingsManager
     bool   isAPMode();
     String getElegooIP();
     int    getTimeout();
+    int    getFirstLayerTimeout();
     bool   getPauseOnRunout();
     int    getStartPrintTimeout();
     bool   getEnabled();
@@ -56,6 +58,7 @@ class SettingsManager
     void setAPMode(bool apMode);
     void setElegooIP(const String &ip);
     void setTimeout(int timeout);
+    void setFirstLayerTimeout(int timeout);
     void setPauseOnRunout(bool pauseOnRunout);
     void setStartPrintTimeout(int timeoutMs);
     void setEnabled(bool enabled);

@@ -20,7 +20,8 @@ SettingsManager::SettingsManager()
     settings.ssid                = "";
     settings.passwd              = "";
     settings.elegooip            = "";
-    settings.timeout             = 2000;
+    settings.timeout             = 4000;
+    settings.first_layer_timeout = 8000;
     settings.pause_on_runout     = true;
     settings.start_print_timeout = 10000;
     settings.enabled             = true;
@@ -52,7 +53,8 @@ bool SettingsManager::load()
     settings.ssid                = doc["ssid"] | "";
     settings.passwd              = doc["passwd"] | "";
     settings.elegooip            = doc["elegooip"] | "";
-    settings.timeout             = doc["timeout"] | 2000;
+    settings.timeout             = doc["timeout"] | 4000;
+    settings.first_layer_timeout = doc["first_layer_timeout"] | 8000;
     settings.pause_on_runout     = doc["pause_on_runout"] | true;
     settings.enabled             = doc["enabled"] | true;
     settings.start_print_timeout = doc["start_print_timeout"] | 10000;
@@ -125,6 +127,11 @@ int SettingsManager::getTimeout()
     return getSettings().timeout;
 }
 
+int SettingsManager::getFirstLayerTimeout()
+{
+    return getSettings().first_layer_timeout;
+}
+
 bool SettingsManager::getPauseOnRunout()
 {
     return getSettings().pause_on_runout;
@@ -192,6 +199,13 @@ void SettingsManager::setTimeout(int timeout)
     settings.timeout = timeout;
 }
 
+void SettingsManager::setFirstLayerTimeout(int timeout)
+{
+    if (!isLoaded)
+        load();
+    settings.first_layer_timeout = timeout;
+}
+
 void SettingsManager::setPauseOnRunout(bool pauseOnRunout)
 {
     if (!isLoaded)
@@ -229,6 +243,7 @@ String SettingsManager::toJson(bool includePassword)
     doc["ssid"]                = settings.ssid;
     doc["elegooip"]            = settings.elegooip;
     doc["timeout"]             = settings.timeout;
+    doc["first_layer_timeout"] = settings.first_layer_timeout;
     doc["pause_on_runout"]     = settings.pause_on_runout;
     doc["start_print_timeout"] = settings.start_print_timeout;
     doc["enabled"]             = settings.enabled;

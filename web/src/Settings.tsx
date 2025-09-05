@@ -5,6 +5,7 @@ function Settings() {
   const [password, setPassword] = createSignal('')
   const [elegooip, setElegooip] = createSignal('')
   const [timeout, setTimeoutValue] = createSignal(2000)
+  const [firstLayerTimeout, setFirstLayerTimeout] = createSignal(4000)
   const [startPrintTimeout, setStartPrintTimeout] = createSignal(10000)
   const [loading, setLoading] = createSignal(true)
   const [error, setError] = createSignal('')
@@ -29,6 +30,7 @@ function Settings() {
       setPassword('')
       setElegooip(settings.elegooip || '')
       setTimeoutValue(settings.timeout || 2000)
+      setFirstLayerTimeout(settings.first_layer_timeout || 4000)
       setStartPrintTimeout(settings.start_print_timeout || 10000)
       setApMode(settings.ap_mode || null)
       setPauseOnRunout(settings.pause_on_runout !== undefined ? settings.pause_on_runout : true)
@@ -55,6 +57,7 @@ function Settings() {
         ap_mode: false,
         elegooip: elegooip(),
         timeout: timeout(),
+        first_layer_timeout: firstLayerTimeout(),
         pause_on_runout: pauseOnRunout(),
         start_print_timeout: startPrintTimeout(),
         enabled: enabled(),
@@ -171,6 +174,21 @@ function Settings() {
               class="input"
             />
             <p class="label">Value in milliseconds between reading from the movement sensor</p>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">First Layer Timeout</legend>
+            <input
+              type="number"
+              id="firstLayerTimeout"
+              value={firstLayerTimeout()}
+              onInput={(e) => setFirstLayerTimeout(parseInt(e.target.value) || 4000)}
+              min="100"
+              max="60000"
+              step="100"
+              class="input"
+            />
+            <p class="label">Timeout in milliseconds for first layer</p>
           </fieldset>
 
           <fieldset class="fieldset">
