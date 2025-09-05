@@ -13,6 +13,18 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - environment: esp32-build
+            chip_family: ESP32
+            artifact_prefix: esp32
+          - environment: esp32-s3-build
+            chip_family: ESP32-S3
+            artifact_prefix: esp32s3
+          - environment: seeed_xiao_esp32s-build
+            chip_family: ESP32-S3
+            artifact_prefix: seeed_xiao_esp32s3
 
     steps:
       - name: Checkout code
@@ -43,51 +55,122 @@ jobs:
           npm install
           npm run build
 
-      - name: Build firmware for ESP32
+      - name: Build firmware for ${{ matrix.chip_family }}
         run: |
           export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
-          export CHIP_FAMILY="ESP32"
-          pio run -e esp32-build
+          export CHIP_FAMILY="${{ matrix.chip_family }}"
+          pio run -e ${{ matrix.environment }}
 
-          # Create artifacts directory and copy ESP32 firmware immediately
+          # Create artifacts directory and copy firmware
           mkdir -p artifacts
-          cp .pio/build/esp32-build/firmware_merged.bin artifacts/esp32-${{ steps.get_version.outputs.version }}-full.bin
-          cp .pio/build/esp32-build/firmware.bin artifacts/esp32-${{ steps.get_version.outputs.version }}-firmware-only.bin
+          cp .pio/build/${{ matrix.environment }}/firmware_merged.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-full.bin
+          cp .pio/build/${{ matrix.environment }}/firmware.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-firmware-only.bin
 
-      - name: Build firmware for ESP32-S3
+      - name: Create matrix info for manifest
         run: |
-          export FIRMWARE_VERSION="${{ steps.get_version.outputs.version }}"
-          export CHIP_FAMILY="ESP32-S3"
-          pio run -e esp32-s3-build
+          mkdir -p matrix-info
+          cat > matrix-info/build-info.json << EOF
+          {
+            "environment": "${{ matrix.environment }}",
+            "chip_family": "${{ matrix.chip_family }}",
+            "artifact_prefix": "${{ matrix.artifact_prefix }}"
+          }
+          EOF
 
-          # Copy ESP32-S3 firmware immediately after build
-          cp .pio/build/esp32-s3-build/firmware_merged.bin artifacts/esp32s3-${{ steps.get_version.outputs.version }}-full.bin
-          cp .pio/build/esp32-s3-build/firmware.bin artifacts/esp32s3-${{ steps.get_version.outputs.version }}-firmware-only.bin
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}
+          path: artifacts/
 
-      - name: Create release artifacts
+      - name: Upload matrix info
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-info-${{ matrix.artifact_prefix }}
+          path: matrix-info/
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get version from tag
+        id: get_version
         run: |
-          # Create manifest.json for ESP Web Tools
+          # Remove 'v' prefix if present and get version
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-artifacts
+
+      - name: Collect all firmware files
+        run: |
+          mkdir -p artifacts
+          find downloaded-artifacts -name "*.bin" -exec cp {} artifacts/ \;
+          ls -la artifacts/
+
+      - name: Generate dynamic manifest.json
+        run: |
+          # Collect matrix info from all builds
+          echo "Collecting matrix information..."
+
+          # Start building the manifest
           cat > artifacts/manifest.json << 'EOF'
           {
             "name": "ESP SFS",
             "version": "${{ steps.get_version.outputs.version }}",
             "new_install_prompt_erase": true,
             "builds": [
+          EOF
+
+          # Process each matrix info file
+          first_entry=true
+          for matrix_dir in downloaded-artifacts/matrix-info-*/; do
+            if [ -d "$matrix_dir" ]; then
+              echo "Processing matrix info from: $matrix_dir"
+              
+              # Read matrix info
+              chip_family=$(jq -r '.chip_family' "$matrix_dir/build-info.json")
+              artifact_prefix=$(jq -r '.artifact_prefix' "$matrix_dir/build-info.json")
+              
+              echo "Found build: $artifact_prefix for $chip_family"
+              
+              # Add comma for subsequent entries
+              if [ "$first_entry" = false ]; then
+                echo "," >> artifacts/manifest.json
+              fi
+              first_entry=false
+              
+              # Add build entry to manifest
+              cat >> artifacts/manifest.json << EOF
               {
-                "chipFamily": "ESP32",
+                "chipFamily": "$chip_family",
                 "parts": [
-                  { "path": "esp32-${{ steps.get_version.outputs.version }}-full.bin", "offset": 0 }
-                ]
-              },
-              {
-                "chipFamily": "ESP32-S3",
-                "parts": [
-                  { "path": "esp32s3-${{ steps.get_version.outputs.version }}-full.bin", "offset": 0 }
+                  { "path": "${artifact_prefix}-${{ steps.get_version.outputs.version }}-full.bin", "offset": 0 }
                 ]
               }
+          EOF
+            fi
+          done
+
+          # Close the manifest
+          cat >> artifacts/manifest.json << 'EOF'
             ]
           }
           EOF
+
+          echo "Generated manifest.json:"
+          cat artifacts/manifest.json
 
       - name: Create GitHub Pages site
         run: |
@@ -193,7 +276,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Upload artifacts
+      - name: Upload final artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ steps.get_version.outputs.version }}
