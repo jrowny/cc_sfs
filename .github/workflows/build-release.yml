@@ -64,7 +64,8 @@ jobs:
           # Create artifacts directory and copy firmware
           mkdir -p artifacts
           cp .pio/build/${{ matrix.environment }}/firmware_merged.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-full.bin
-          cp .pio/build/${{ matrix.environment }}/firmware.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-firmware-only.bin
+          cp .pio/build/${{ matrix.environment }}/firmware.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-firmware.bin
+          cp .pio/build/${{ matrix.environment }}/littlefs.bin artifacts/${{ matrix.artifact_prefix }}-${{ steps.get_version.outputs.version }}-filesystem.bin
 
       - name: Create matrix info for manifest
         run: |
