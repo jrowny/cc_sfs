@@ -24,6 +24,7 @@ SettingsManager::SettingsManager()
     settings.pause_on_runout     = true;
     settings.start_print_timeout = 10000;
     settings.enabled             = true;
+    settings.has_connected       = false;
 }
 
 bool SettingsManager::load()
@@ -55,6 +56,7 @@ bool SettingsManager::load()
     settings.pause_on_runout     = doc["pause_on_runout"] | true;
     settings.enabled             = doc["enabled"] | true;
     settings.start_print_timeout = doc["start_print_timeout"] | 10000;
+    settings.has_connected       = doc["has_connected"] | false;
 
     isLoaded = true;
     return true;
@@ -138,6 +140,11 @@ bool SettingsManager::getEnabled()
     return getSettings().enabled;
 }
 
+bool SettingsManager::getHasConnected()
+{
+    return getSettings().has_connected;
+}
+
 void SettingsManager::setSSID(const String &ssid)
 {
     if (!isLoaded)
@@ -206,6 +213,13 @@ void SettingsManager::setEnabled(bool enabled)
     settings.enabled = enabled;
 }
 
+void SettingsManager::setHasConnected(bool hasConnected)
+{
+    if (!isLoaded)
+        load();
+    settings.has_connected = hasConnected;
+}
+
 String SettingsManager::toJson(bool includePassword)
 {
     String                   output;
@@ -218,6 +232,7 @@ String SettingsManager::toJson(bool includePassword)
     doc["pause_on_runout"]     = settings.pause_on_runout;
     doc["start_print_timeout"] = settings.start_print_timeout;
     doc["enabled"]             = settings.enabled;
+    doc["has_connected"]       = settings.has_connected;
 
     if (includePassword)
     {

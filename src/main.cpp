@@ -37,21 +37,30 @@ unsigned long lastWifiCheck      = 0;
 unsigned long wifiReconnectStart = 0;
 bool          isReconnecting     = false;
 
-// If wifi fails, revert to AP mode and restart;
+// If wifi fails, revert to AP mode and restart (only if never connected before);
 void failWifi()
 {
-    settingsManager.setAPMode(true);
-    if (settingsManager.save())
+    // Only revert to AP mode if WiFi has never successfully connected
+    if (!settingsManager.getHasConnected())
     {
-        logger.log("Failed to connect to wifi, reverted to AP mode");
+        settingsManager.setAPMode(true);
+        if (settingsManager.save())
+        {
+            logger.log("Failed to connect to wifi, reverted to AP mode (first connection attempt)");
+        }
+        else
+        {
+            logger.log("Failed to update settings");
+        }
+
+        delay(1000);  // Give time for serial output
+        ESP.restart();
     }
     else
     {
-        logger.log("Failed to update settings");
+        logger.log("WiFi connection failed, retrying in 30 seconds");
+        // Don't restart, just continue trying to reconnect in checkWifiConnection()
     }
-
-    delay(1000);  // Give time for serial output
-    ESP.restart();
 }
 
 void wifiSetup()
@@ -80,6 +89,15 @@ void wifiSetup()
 
         Serial.println();
         logger.log("WiFi Connected");
+
+        // Mark that WiFi has successfully connected at least once
+        if (!settingsManager.getHasConnected())
+        {
+            settingsManager.setHasConnected(true);
+            settingsManager.save();
+            logger.log("First successful WiFi connection recorded");
+        }
+
         if (!MDNS.begin("ccxsfs20"))
         {
             logger.log("Error setting up MDNS responder!");
@@ -124,6 +142,13 @@ void checkWifiConnection()
         {
             logger.log("WiFi reconnected successfully");
             isReconnecting = false;
+
+            // Mark that WiFi has successfully connected at least once
+            if (!settingsManager.getHasConnected())
+            {
+                settingsManager.setHasConnected(true);
+                settingsManager.save();
+            }
         }
     }
 }

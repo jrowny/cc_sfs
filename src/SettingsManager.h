@@ -14,6 +14,7 @@ struct user_settings
     bool   pause_on_runout;
     int    start_print_timeout;
     bool   enabled;
+    bool   has_connected;
 };
 
 class SettingsManager
@@ -48,6 +49,7 @@ class SettingsManager
     bool   getPauseOnRunout();
     int    getStartPrintTimeout();
     bool   getEnabled();
+    bool   getHasConnected();
 
     void setSSID(const String &ssid);
     void setPassword(const String &password);
@@ -57,6 +59,7 @@ class SettingsManager
     void setPauseOnRunout(bool pauseOnRunout);
     void setStartPrintTimeout(int timeoutMs);
     void setEnabled(bool enabled);
+    void setHasConnected(bool hasConnected);
 
     String toJson(bool includePassword = true);
 };
