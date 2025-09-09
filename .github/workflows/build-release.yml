@@ -51,7 +51,7 @@ jobs:
 
       - name: Build web assets
         run: |
-          cd web
+          cd webui
           npm install
           npm run build
 
@@ -173,95 +173,20 @@ jobs:
           echo "Generated manifest.json:"
           cat artifacts/manifest.json
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+
       - name: Create GitHub Pages site
         run: |
+          # Build the Vite project
+          cd website
+          npm install
+          npm run build
+          cd ..
+
+          # Copy the built Vite project to pages directory
           mkdir -p pages
-
-          # Copy artifacts to pages directory
-          cp artifacts/* pages/
-
-          # Create index.html for ESP Web Tools
-          cat > pages/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>ESP SFS Firmware Installer - v${{ steps.get_version.outputs.version }}</title>
-              <style>
-                  body {
-                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                      max-width: 800px;
-                      margin: 0 auto;
-                      padding: 2rem;
-                      background: #f5f5f5;
-                  }
-                  .container {
-                      background: white;
-                      padding: 2rem;
-                      border-radius: 8px;
-                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                  }
-                  h1 {
-                      color: #333;
-                      text-align: center;
-                      margin-bottom: 2rem;
-                  }
-                  .version-info {
-                      background: #f8f9fa;
-                      padding: 1rem;
-                      border-radius: 4px;
-                      margin-bottom: 2rem;
-                  }
-                  .install-section {
-                      text-align: center;
-                      margin: 2rem 0;
-                  }
-                  .note {
-                      color: #666;
-                      font-size: 0.9rem;
-                      margin-top: 1rem;
-                  }
-                  esp-web-install-button {
-                      display: inline-block;
-                      margin: 1rem;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <h1>Esp -> Elegoo Carbon Centauri X BigTreeTech SFS Firmware Installer</h1>
-                  
-                  <div class="version-info">
-                      <h3>Version: ${{ steps.get_version.outputs.version }}</h3>
-                  </div>
-                  
-                  <div class="install-section">
-                      <h2>Install Firmware</h2>
-                      <p>Connect your ESP device via USB and click the install button below:</p>
-                      
-                      <esp-web-install-button
-                          manifest="manifest.json"
-                      ></esp-web-install-button>
-                      
-                      <div class="note">
-                          <p><strong>Requirements:</strong></p>
-                          <ul style="text-align: left; display: inline-block;">
-                              <li>Chrome, Edge, or other Chromium-based browser</li>
-                              <li>ESP32 or ESP32-S3 device connected via USB</li>
-                              <li>USB drivers installed for your device</li>
-                          </ul>
-                      </div>
-                  </div>
-              </div>
-              
-              <script
-                  type="module"
-                  src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"
-              ></script>
-          </body>
-          </html>
-          EOF
+          cp -r website/dist/* pages/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

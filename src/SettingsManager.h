@@ -33,11 +33,11 @@ class SettingsManager
    public:
     static SettingsManager &getInstance();
 
-    // After saving wifi settings, requests restart, TODO: maybe use an event instead of this
-    unsigned long requestRestartAt;
+    // Flag to request WiFi reconnection with new credentials
+    bool requestWifiReconnect;
 
     bool load();
-    bool save();
+    bool save(bool skipWifiCheck = false);
 
     //  (loads if not already loaded)
     const user_settings &getSettings();
