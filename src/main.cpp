@@ -27,6 +27,7 @@ const char* chipFamily      = TOSTRING(CHIP_FAMILY_RAW);
 
 #define WIFI_CHECK_INTERVAL 30000     // Check WiFi every 30 seconds
 #define WIFI_RECONNECT_TIMEOUT 10000  // Wait 10 seconds for reconnection
+#define NTP_SYNC_INTERVAL 3600000     // Re-sync with NTP every hour (3600000 ms)
 
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
@@ -41,6 +42,8 @@ bool          isReconnecting     = false;
 // Used by improv-wifi to parse serial data
 uint8_t x_buffer[16];
 uint8_t x_position = 0;
+// Variables to track NTP synchronization
+unsigned long lastNTPSync = 0;
 
 // If wifi fails, revert to AP mode and restart (only if never connected before);
 void failWifi()
@@ -258,15 +261,22 @@ void setup()
     logger.log("System initialization complete");
 }
 
+void syncTimeWithNTP()
+{
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo))
+    {
+        logger.log("NTP time synchronization successful");
+    }
+    else
+    {
+        logger.log("NTP time synchronization failed");
+    }
+}
+
 unsigned long getTime()
 {
-    time_t    now;
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
-    {
-        // Serial.println("Failed to obtain time");
-        return (0);
-    }
+    time_t now;
     time(&now);
     return now;
 }
@@ -440,8 +450,16 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
 
 void loop()
 {
+    unsigned long currentTime     = millis();
+    bool          isWifiConnected = !settingsManager.isAPMode() && WiFi.status() == WL_CONNECTED;
+
     // listen for improv-wifi to setup wifi
     /*if (Serial.available() > 0)  // settingsManager.isAPMode() ?
+
+    unsigned long currentTime     = millis();
+    bool          isWifiConnected = !settingsManager.isAPMode() && WiFi.status() == WL_CONNECTED;
+
+
     {
         uint8_t b = Serial.read();
 
@@ -455,23 +473,31 @@ void loop()
             x_position = 0;
         }
     }*/
-    unsigned long currentTime = millis();
     logger.logf("Current time: %d", currentTime);
 
     // Check if WiFi reconnection is requested
-    /*
+
     if (settingsManager.requestWifiReconnect)
     {
         settingsManager.requestWifiReconnect = false;
         reconnectWifiWithNewCredentials();
     }
+
+    if (isWifiConnected)
+    {
+        elegooCC.loop();
+
+        // Periodic NTP synchronization
+        if (currentTime - lastNTPSync >= NTP_SYNC_INTERVAL)
+        {
+            lastNTPSync = currentTime;
+            syncTimeWithNTP();
+        }
+    }
     else if (currentTime - lastWifiCheck >= WIFI_CHECK_INTERVAL)
     {
-        lastWifiCheck = currentTime;
         checkWifiConnection();
     }
 
-    elegooCC.loop();
-    webServer.loop()
-    */
+    webServer.loop();
 }
