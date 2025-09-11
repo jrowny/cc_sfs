@@ -12,3 +12,4 @@ act/artifacts/
 
 website/public/manifest.json
 website/public/*.bin
+website/.vite/
