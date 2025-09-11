@@ -283,7 +283,6 @@ unsigned long getTime()
 
 void onImprovErrorCallback(improv::Error err)
 {
-    // log it?
     logger.logf("Improv error: %d", err);
 }
 
