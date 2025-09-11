@@ -187,6 +187,8 @@ jobs:
           # Copy the built Vite project to pages directory
           mkdir -p pages
           cp -r website/dist/* pages/
+              # Copy artifacts to pages directory
+          cp artifacts/* pages/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
