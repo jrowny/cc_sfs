@@ -342,10 +342,9 @@ void ElegooCC::checkFilamentMovement(unsigned long currentTime)
 {
     int currentMovementValue = digitalRead(MOVEMENT_SENSOR_PIN);
 
-    // CurrentLayer is unreliable when using Orcaslicer 2.3.0, because it is missing some g-code,so
-    // we use Z instead. , assuming first layer is at Z offset <  0.1
+    // CurrentLayer
     int movementTimeout =
-        currentZ < 0.1 ? settingsManager.getFirstLayerTimeout() : settingsManager.getTimeout();
+        currentLayer < 3 ? settingsManager.getFirstLayerTimeout() : settingsManager.getTimeout();
 
     // Check if movement sensor value has changed, if the filament is moving, it should change every
     // so often when it changes, reset the timeout
