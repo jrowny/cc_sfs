@@ -1,6 +1,6 @@
-#include <cstring>
-
 #include "improv.h"
+
+#include <cstring>
 
 namespace improv
 {
@@ -209,6 +209,58 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<Strin
     }
     return out;
 }
+
 #endif  // ARDUINO
+
+void set_state(State state)
+{
+    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
+    data.resize(11);
+    data[6] = IMPROV_SERIAL_VERSION;
+    data[7] = TYPE_CURRENT_STATE;
+    data[8] = 1;
+    data[9] = state;
+
+    uint8_t checksum = 0x00;
+    for (uint8_t d : data)
+        checksum += d;
+    data[10] = checksum;
+
+    Serial.write(data.data(), data.size());
+}
+
+void send_response(std::vector<uint8_t> &response)
+{
+    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
+    data.resize(9);
+    data[6] = IMPROV_SERIAL_VERSION;
+    data[7] = TYPE_RPC_RESPONSE;
+    data[8] = response.size();
+    data.insert(data.end(), response.begin(), response.end());
+
+    uint8_t checksum = 0x00;
+    for (uint8_t d : data)
+        checksum += d;
+    data.push_back(checksum);
+
+    Serial.write(data.data(), data.size());
+}
+
+void set_error(Error error)
+{
+    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
+    data.resize(11);
+    data[6] = IMPROV_SERIAL_VERSION;
+    data[7] = TYPE_ERROR_STATE;
+    data[8] = 1;
+    data[9] = error;
+
+    uint8_t checksum = 0x00;
+    for (uint8_t d : data)
+        checksum += d;
+    data[10] = checksum;
+
+    Serial.write(data.data(), data.size());
+}
 
 }  // namespace improv

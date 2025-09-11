@@ -81,4 +81,8 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<Strin
                                         bool add_checksum = true);
 #endif  // ARDUINO
 
+void set_state(State state);
+void set_error(Error error);
+void send_response(std::vector<uint8_t> &response);
+
 }  // namespace improv

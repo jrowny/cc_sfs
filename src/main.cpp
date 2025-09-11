@@ -15,6 +15,7 @@
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
+// Handle the case where environment variables are empty strings
 #ifndef FIRMWARE_VERSION_RAW
 #define FIRMWARE_VERSION_RAW dev
 #endif
@@ -22,8 +23,11 @@
 #define CHIP_FAMILY_RAW Unknown
 #endif
 
-const char* firmwareVersion = TOSTRING(FIRMWARE_VERSION_RAW);
-const char* chipFamily      = TOSTRING(CHIP_FAMILY_RAW);
+// Create a macro that checks if the stringified value is empty and uses fallback
+#define GET_VERSION_STRING(x, fallback) (strlen(TOSTRING(x)) == 0 ? fallback : TOSTRING(x))
+
+const char* firmwareVersion = GET_VERSION_STRING(FIRMWARE_VERSION_RAW, "dev");
+const char* chipFamily      = GET_VERSION_STRING(CHIP_FAMILY_RAW, "Unknown");
 
 #define WIFI_CHECK_INTERVAL 30000     // Check WiFi every 30 seconds
 #define WIFI_RECONNECT_TIMEOUT 10000  // Wait 10 seconds for reconnection
@@ -283,56 +287,6 @@ void onImprovErrorCallback(improv::Error err)
     logger.logf("Improv error: %d", err);
 }
 
-void set_state(improv::State state)
-{
-    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
-    data.resize(11);
-    data[6] = improv::IMPROV_SERIAL_VERSION;
-    data[7] = improv::TYPE_CURRENT_STATE;
-    data[8] = 1;
-    data[9] = state;
-
-    uint8_t checksum = 0x00;
-    for (uint8_t d : data)
-        checksum += d;
-    data[10] = checksum;
-
-    Serial.write(data.data(), data.size());
-}
-
-void send_response(std::vector<uint8_t>& response)
-{
-    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
-    data.resize(9);
-    data[6] = improv::IMPROV_SERIAL_VERSION;
-    data[7] = improv::TYPE_RPC_RESPONSE;
-    data[8] = response.size();
-    data.insert(data.end(), response.begin(), response.end());
-
-    uint8_t checksum = 0x00;
-    for (uint8_t d : data)
-        checksum += d;
-    data.push_back(checksum);
-
-    Serial.write(data.data(), data.size());
-}
-
-void set_error(improv::Error error)
-{
-    std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
-    data.resize(11);
-    data[6] = improv::IMPROV_SERIAL_VERSION;
-    data[7] = improv::TYPE_ERROR_STATE;
-    data[8] = 1;
-    data[9] = error;
-
-    uint8_t checksum = 0x00;
-    for (uint8_t d : data)
-        checksum += d;
-    data[10] = checksum;
-
-    Serial.write(data.data(), data.size());
-}
 std::vector<std::string> getLocalUrl()
 {
     return {// URL where user can finish onboarding or use device
@@ -351,13 +305,13 @@ void getAvailableWifiNetworks()
                                        {WiFi.SSID(id), String(WiFi.RSSI(id)),
                                         (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")},
                                        false);
-        send_response(data);
+        improv::send_response(data);
         delay(1);
     }
     // final response
     std::vector<uint8_t> data =
         improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<std::string>{}, false);
-    send_response(data);
+    improv::send_response(data);
 }
 
 bool onImprovCommandCallback(improv::ImprovCommand cmd)
@@ -368,14 +322,14 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
         {
             if ((WiFi.status() == WL_CONNECTED))
             {
-                set_state(improv::State::STATE_PROVISIONED);
+                improv::set_state(improv::State::STATE_PROVISIONED);
                 std::vector<uint8_t> data =
                     improv::build_rpc_response(improv::GET_CURRENT_STATE, getLocalUrl(), false);
-                send_response(data);
+                improv::send_response(data);
             }
             else
             {
-                set_state(improv::State::STATE_AUTHORIZED);
+                improv::set_state(improv::State::STATE_AUTHORIZED);
             }
 
             break;
@@ -385,11 +339,11 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
         {
             if (cmd.ssid.length() == 0)
             {
-                set_error(improv::Error::ERROR_INVALID_RPC);
+                improv::set_error(improv::Error::ERROR_INVALID_RPC);
                 break;
             }
 
-            set_state(improv::STATE_PROVISIONING);
+            improv::set_state(improv::STATE_PROVISIONING);
 
             settingsManager.setSSID(cmd.ssid.c_str());
             settingsManager.setPassword(cmd.password.c_str());
@@ -398,15 +352,15 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
 
             if (reconnectWifiWithNewCredentials())  // connectWifi(cmd.ssid, cmd.password)
             {
-                set_state(improv::STATE_PROVISIONED);
+                improv::set_state(improv::STATE_PROVISIONED);
                 std::vector<uint8_t> data =
                     improv::build_rpc_response(improv::WIFI_SETTINGS, getLocalUrl(), false);
-                send_response(data);
+                improv::send_response(data);
             }
             else
             {
-                set_state(improv::STATE_STOPPED);
-                set_error(improv::Error::ERROR_UNABLE_TO_CONNECT);
+                improv::set_state(improv::STATE_STOPPED);
+                improv::set_error(improv::Error::ERROR_UNABLE_TO_CONNECT);
             }
 
             break;
@@ -424,7 +378,7 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
                                               "CC_SFS"};
             std::vector<uint8_t>     data =
                 improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
-            send_response(data);
+            improv::send_response(data);
             break;
         }
 
@@ -436,7 +390,7 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
 
         default:
         {
-            set_error(improv::ERROR_UNKNOWN_RPC);
+            improv::set_error(improv::ERROR_UNKNOWN_RPC);
             return false;
         }
     }
