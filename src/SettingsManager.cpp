@@ -16,6 +16,8 @@ SettingsManager &SettingsManager::getInstance()
 SettingsManager::SettingsManager()
 {
     isLoaded                     = false;
+    requestWifiReconnect         = false;
+    wifiChanged                  = false;
     settings.ap_mode             = false;
     settings.ssid                = "";
     settings.passwd              = "";
@@ -64,7 +66,7 @@ bool SettingsManager::load()
     return true;
 }
 
-bool SettingsManager::save()
+bool SettingsManager::save(bool skipWifiCheck)
 {
     String output = toJson(true);
 
@@ -84,11 +86,11 @@ bool SettingsManager::save()
 
     file.close();
     logger.log("Settings saved successfully");
-    if (wifiChanged)
+    if (!skipWifiCheck && wifiChanged)
     {
-        logger.log("Wifi changed, requesting restart");
-        requestRestartAt = millis() + 3000;
-        wifiChanged      = false;
+        logger.log("WiFi changed, requesting reconnection");
+        requestWifiReconnect = true;
+        wifiChanged          = false;
     }
     return true;
 }

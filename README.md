@@ -119,5 +119,5 @@ C++ code is a platformio project in `/src` folder. You can find more info [in th
 
 ### Web UI
 
-Web UI code is a [SolidJS](https://www.solidjs.com/) app with [vite](https://vite.dev/) in the `/web` folder, it comes with a mock server. Just run `npm i && npm run dev` in the web folder.
+Web UI code is a [SolidJS](https://www.solidjs.com/) app with [vite](https://vite.dev/) in the `/webui` folder, it comes with a mock server. Just run `npm i && npm run dev` in the web folder.
 Use `npm run build` in the `/web` folder to copy code into the `/data` folder, followed by `Upload file sytem image` command from PlatformIO
