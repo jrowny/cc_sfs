@@ -1,7 +1,7 @@
 // Fetch version from manifest.json and update the version display
 async function updateVersionFromManifest() {
   try {
-    const response = await fetch("/manifest.json");
+    const response = await fetch("./manifest.json");
     if (!response.ok) {
       console.warn("Could not fetch manifest.json, using default version");
       return;
