@@ -39,11 +39,18 @@ unsigned long lastWifiCheck      = 0;
 unsigned long wifiReconnectStart = 0;
 bool          isReconnecting     = false;
 
+// These things get setup in the loop, not setup, so we need to track if they've happened
+bool isWifiSetup      = false;
+bool isElegooSetup    = false;
+bool isWebServerSetup = false;
+bool isNtpSetup       = false;
+
 // Used by improv-wifi to parse serial data
 uint8_t x_buffer[16];
 uint8_t x_position = 0;
+
 // Variables to track NTP synchronization
-unsigned long lastNTPSync = 0;
+unsigned long lastNTPSyncAttempt = 0;
 
 // If wifi fails, revert to AP mode and restart (only if never connected before);
 void failWifi()
@@ -152,6 +159,7 @@ bool wifiSetup()
     if (settingsManager.isAPMode())
     {
         startAPMode();
+        logger.log("Wifi setup in AP mode");
         return false;
     }
     else
@@ -240,30 +248,18 @@ void setup()
     logger.logf("Firmware version: %s", firmwareVersion);
     logger.logf("Chip family: %s", chipFamily);
 
-    // SPIFFS.begin();  // note: this must be done before wifi/server setup
-    // logger.log("LittleFS filesystem initialized");
+    SPIFFS.begin();  // note: this must be done before wifi/server setup
+    logger.log("Filesystem initialized");
 
     // Load settings early
-    // settingsManager.load();
-
-    // bool connected = wifiSetup();
-    // if (connected)
-    // {
-    //     logger.log("NTP time synchronization started");
-    //     configTime(0, 0, ntpServer);
-    // }
-
-    // logger.log("Startubg Elegoo communication");
-    // elegooCC.setup();
-    // webServer.begin();
-    // logger.log("Web server started");
-
-    logger.log("System initialization complete");
+    settingsManager.load();
+    logger.log("Settings Manager Loaded");
 }
 
-void syncTimeWithNTP()
+void syncTimeWithNTP(unsigned long currentTime)
 {
     struct tm timeinfo;
+    lastNTPSyncAttempt = currentTime;
     if (getLocalTime(&timeinfo))
     {
         logger.log("NTP time synchronization successful");
@@ -448,18 +444,9 @@ bool onImprovCommandCallback(improv::ImprovCommand cmd)
     return true;
 }
 
-void loop()
+bool handleImprovWifi()
 {
-    unsigned long currentTime     = millis();
-    bool          isWifiConnected = !settingsManager.isAPMode() && WiFi.status() == WL_CONNECTED;
-
-    // listen for improv-wifi to setup wifi
-    /*if (Serial.available() > 0)  // settingsManager.isAPMode() ?
-
-    unsigned long currentTime     = millis();
-    bool          isWifiConnected = !settingsManager.isAPMode() && WiFi.status() == WL_CONNECTED;
-
-
+    if (Serial.available() > 0)
     {
         uint8_t b = Serial.read();
 
@@ -472,8 +459,36 @@ void loop()
         {
             x_position = 0;
         }
-    }*/
-    logger.logf("Current time: %d", currentTime);
+        return true;
+    }
+    return false;
+}
+
+void loop()
+{
+    // handling immprovWifi should be the first thing we do
+    if (handleImprovWifi())
+    {
+        // if we handled serial data, don't return so we don't bother with the rest of the setup
+        return;
+    }
+    unsigned long currentTime     = millis();
+    bool          isWifiConnected = !settingsManager.isAPMode() && WiFi.status() == WL_CONNECTED;
+
+    if (!isWifiSetup)
+    {
+        isWifiSetup = wifiSetup();
+        isWifiSetup = true;
+        logger.log("Wifi setup complete");
+        return;  //
+    }
+    if (!isWebServerSetup)
+    {
+        webServer.begin();
+        isWebServerSetup = true;
+        logger.log("Webserver setup complete");
+        return;  //
+    }
 
     // Check if WiFi reconnection is requested
 
@@ -485,13 +500,24 @@ void loop()
 
     if (isWifiConnected)
     {
+        if (!isElegooSetup)
+        {
+            elegooCC.setup();
+            logger.log("Elegoo setup complete");
+            isElegooSetup = true;
+        }
         elegooCC.loop();
 
-        // Periodic NTP synchronization
-        if (currentTime - lastNTPSync >= NTP_SYNC_INTERVAL)
+        if (!isNtpSetup)
         {
-            lastNTPSync = currentTime;
-            syncTimeWithNTP();
+            configTime(0, 0, ntpServer);
+            syncTimeWithNTP(currentTime);
+            logger.log("NTP setup complete");
+            isNtpSetup = true;
+        }
+        else if (currentTime - lastNTPSyncAttempt >= NTP_SYNC_INTERVAL)
+        {
+            syncTimeWithNTP(currentTime);
         }
     }
     else if (currentTime - lastWifiCheck >= WIFI_CHECK_INTERVAL)

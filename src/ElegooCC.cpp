@@ -276,7 +276,7 @@ void ElegooCC::connect()
     }
     webSocket.setReconnectInterval(3000);
     ipAddress = settingsManager.getElegooIP();
-    logger.logf("Connecting to %s", ipAddress.c_str());
+    logger.logf("Attempting connection to Elegoo CC @ %s", ipAddress.c_str());
     webSocket.begin(ipAddress, CARBON_CENTAURI_PORT, "/websocket");
 }
 
