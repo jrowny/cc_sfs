@@ -2,6 +2,10 @@
 
 The Carbon Centauri is a great budget printer, but its filament runout sensor is a simple binary switch which cannot detect filament movement. This means the printer will print in mid-air if the filament gets tangled, breaks after the sensor, or fails to feed for any reason. This project aims to mitigate that issue with only two parts and 4 wires.
 
+## Alternative Solutions
+
+If you are open to flashing your CC1, I would highly recommend this project: [OpenFilamentSensor](https://github.com/harpua555/OpenFilamentSensor) which is a morea dvanced version of this idea
+
 ## Table of Contents
 
 - [Advanced Filament Sensor for the Elegoo Carbon Centauri](#advanced-filament-sensor-for-the-elegoo-carbon-centauri)
