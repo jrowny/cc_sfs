@@ -4,7 +4,7 @@ The Carbon Centauri is a great budget printer, but its filament runout sensor is
 
 ## Alternative Solutions
 
-If you are open to flashing your CC1, I would highly recommend this project: [OpenFilamentSensor](https://github.com/harpua555/OpenFilamentSensor) which is a more advanced version of this idea. This project does the "best it can" from the stock firmware.
+There's an alternative and more advanced fork of this project called: [OpenFilamentSensor](https://github.com/harpua555/OpenFilamentSensor).
 
 ## Table of Contents
 
